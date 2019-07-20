@@ -88,17 +88,15 @@
 .gray {color: #999999}
 
 .search-trigger {
-  /* display: none; */
-  display: inline-block;
-    top: 6px;
+  display: none;
   color: #FFF;
   position: relative;
   cursor: pointer;
   top: 1px;
   margin-left: 20px;
   @mixin atMedium {
-    /* display: inline-block;
-    top: 6px; */
+    display: inline-block;
+    top: 6px;
   }
 }
 
