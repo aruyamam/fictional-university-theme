@@ -32,15 +32,15 @@ function pageBanner($args = NULL)
    }
 
    ?>
-   <div class="page-banner">
-      <div class="page-banner__bg-image" style="background-image: url(<?= $args['photo'] ?>);"></div>
-      <div class="page-banner__content container container--narrow">
-         <h1 class="page-banner__title"><?= $args['title'] ?></h1>
-         <div class="page-banner__intro">
-            <p><?= $args['subtitle'] ?></p>
-         </div>
+<div class="page-banner">
+   <div class="page-banner__bg-image" style="background-image: url(<?= $args['photo'] ?>);"></div>
+   <div class="page-banner__content container container--narrow">
+      <h1 class="page-banner__title"><?= $args['title'] ?></h1>
+      <div class="page-banner__intro">
+         <p><?= $args['subtitle'] ?></p>
       </div>
    </div>
+</div>
 <?php
 }
 
@@ -145,4 +145,21 @@ add_filter('login_headertext', 'ourLoginText');
 function ourLoginText()
 {
    return get_bloginfo('name');
+}
+
+// Force note posts to be private
+add_filter('wp_insert_post_data', 'makeNotePrivate');
+
+function makeNotePrivate($data)
+{
+   if ($data['post_type'] === 'note') {
+      $data['post_content'] = sanitize_textarea_field($data['post_content']);
+      $data['post_title'] = sanitize_textarea_field($data['post_title']);
+   }
+
+   if ($data['post_type'] === 'note' && $data['post_status'] !== 'trash') {
+      $data['post_status'] = 'private';
+   }
+
+   return $data;
 }
