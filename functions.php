@@ -9,6 +9,12 @@ function university_custom_rest()
          return get_the_author();
       }
    ]);
+
+   register_rest_field('note', 'userNoteCount', [
+      'get_callback' => function () {
+         return count_user_posts(get_current_user_id(), 'note');
+      }
+   ]);
 }
 
 add_action('rest_api_init', 'university_custom_rest');
@@ -32,15 +38,15 @@ function pageBanner($args = NULL)
    }
 
    ?>
-   <div class="page-banner">
-      <div class="page-banner__bg-image" style="background-image: url(<?= $args['photo'] ?>);"></div>
-      <div class="page-banner__content container container--narrow">
-         <h1 class="page-banner__title"><?= $args['title'] ?></h1>
-         <div class="page-banner__intro">
-            <p><?= $args['subtitle'] ?></p>
-         </div>
+<div class="page-banner">
+   <div class="page-banner__bg-image" style="background-image: url(<?= $args['photo'] ?>);"></div>
+   <div class="page-banner__content container container--narrow">
+      <h1 class="page-banner__title"><?= $args['title'] ?></h1>
+      <div class="page-banner__intro">
+         <p><?= $args['subtitle'] ?></p>
       </div>
    </div>
+</div>
 <?php
 }
 
@@ -52,7 +58,8 @@ function university_files()
    wp_enqueue_style('font-awesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
    wp_enqueue_style('university_main_style', get_stylesheet_uri());
    wp_localize_script('main-univeristy-js', 'universityData',  [
-      'root_url' => get_site_url()
+      'root_url' => get_site_url(),
+      'nonce' => wp_create_nonce('wp_rest')
    ]);
 }
 
@@ -144,4 +151,25 @@ add_filter('login_headertext', 'ourLoginText');
 function ourLoginText()
 {
    return get_bloginfo('name');
+}
+
+// Force note posts to be private
+add_filter('wp_insert_post_data', 'makeNotePrivate', 10, 2);
+
+function makeNotePrivate($data, $postarr)
+{
+   if ($data['post_type'] === 'note') {
+      if (count_user_posts(get_current_user_id(), 'note') > 4 && !$postarr['ID']) {
+         die('You have reached your note limit.');
+      }
+
+      $data['post_content'] = sanitize_textarea_field($data['post_content']);
+      $data['post_title'] = sanitize_textarea_field($data['post_title']);
+   }
+
+   if ($data['post_type'] === 'note' && $data['post_status'] !== 'trash') {
+      $data['post_status'] = 'private';
+   }
+
+   return $data;
 }
